@@ -15,11 +15,6 @@ print ('Packages ready!')
 
 
 # Load Data
-# train = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_1_train.csv")
-# sub = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_1_sample_submission.csv")
-# train_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_1_train_images/")
-# test_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_1_test_images/")
-
 train = pd.read_csv("/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-intracranial-hemorrhage-detection/stage_2_train.csv")
 sub = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_2_sample_submission.csv")
 train_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_2_train/")
@@ -34,7 +29,7 @@ train['filename'] = train['ID'].apply(lambda st: "ID_" + st.split('_')[1] + ".pn
 sub['filename'] = sub['ID'].apply(lambda st: "ID_" + st.split('_')[1] + ".png")
 sub['type'] = sub['ID'].apply(lambda st: st.split('_')[2])
 
-train.head()
+print(train.head())
 
 print ('Train type =', list(train.type.unique()))
 print ('Train label =', list(train.Label.unique()))
@@ -44,13 +39,13 @@ print ('Train label =', list(train.Label.unique()))
 # Basic Counts
 print ('Number of Patients: ', train.PatientID.nunique())
 
-train.type.value_counts()
+print(train.type.value_counts())
 
 # Labels
 print(train.Label.value_counts())
 sns.countplot(x='Label', data=train)
 
-train.groupby('type').Label.value_counts()
+print(train.groupby('type').Label.value_counts())
 
 sns.countplot(x="Label", hue="type", data=train)
 
@@ -58,17 +53,13 @@ sns.countplot(x="Label", hue="type", data=train)
 
 
 # Visualization
-# TRAIN_IMG_PATH = "../input/rsna-intracranial-hemorrhage-detection/stage_1_train_images/"
-# TEST_IMG_PATH = "../input/rsna-intracranial-hemorrhage-detection/stage_1_test_images/"
-# BASE_PATH = '/kaggle/input/rsna-intracranial-hemorrhage-detection/'
-# TRAIN_DIR = 'stage_1_train_images/'
-# TEST_DIR = 'stage_1_test_images/'
+
 
 TRAIN_IMG_PATH = ".././rsna-intracranial-hemorrhage-detection/stage_2_train/"
 TEST_IMG_PATH = ".././rsna-intracranial-hemorrhage-detection/stage_2_test/"
-BASE_PATH = '/kaggle/input/rsna-intracranial-hemorrhage-detection/'
-TRAIN_DIR = 'stage_1_train_images/'
-TEST_DIR = 'stage_1_test_images/'
+BASE_PATH = '/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-intracranial-hemorrhage-detection'
+TRAIN_DIR = '/stage_2_train/'
+TEST_DIR = '/stage_2_test/'
 
 
 def window_image(img, window_center, window_width, intercept, slope, rescale=True):
@@ -159,7 +150,7 @@ from tqdm import tqdm
 
 test = pd.DataFrame(sub.filename.unique(), columns=['filename'])
 print ('Test:', test.shape[0])
-test.head()
+print(test.head())
 
 np.random.seed(1234)
 sample_files = np.random.choice(os.listdir(TRAIN_IMG_PATH), 200000)
@@ -168,11 +159,11 @@ sample_df = train[train.filename.apply(lambda x: x.replace('.png', '.dcm')).isin
 pivot_df = sample_df[['Label', 'filename', 'type']].drop_duplicates().pivot(
     index='filename', columns='type', values='Label').reset_index()
 print(pivot_df.shape)
-pivot_df.head()
+print(pivot_df.head())
 
 
 def save_and_resize(filenames, load_dir):
-    save_dir = '/kaggle/tmp/'
+    save_dir = '/home/ubuntu/Machine-Learning/Final-Project-Group9'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -212,7 +203,7 @@ def create_datagen():
 def create_test_gen():
     return ImageDataGenerator().flow_from_dataframe(
         test,
-        directory='/kaggle/tmp/',
+        directory='/home/ubuntu/Machine-Learning/Final-Project-Group9/',
         x_col='filename',
         class_mode=None,
         target_size=(224, 224),
@@ -223,7 +214,7 @@ def create_test_gen():
 def create_flow(datagen, subset):
     return datagen.flow_from_dataframe(
         pivot_df,
-        directory='/kaggle/tmp/',
+        directory='/home/ubuntu/Machine-Learning/Final-Project-Group9/',
         x_col='filename',
         y_col=['any', 'epidural', 'intraparenchymal',
                'intraventricular', 'subarachnoid', 'subdural'],
@@ -243,8 +234,8 @@ test_gen = create_test_gen()
 # DenseNet Model
 
 densenet = DenseNet121(
-    weights='../input/densenet-keras/DenseNet-BC-121-32-no-top.h5',
-    include_top=False,
+    weights='imagenet',
+    include_top= True,
     input_shape=(224,224,3)
 )
 
