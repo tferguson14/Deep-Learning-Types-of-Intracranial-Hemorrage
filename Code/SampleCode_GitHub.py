@@ -1,4 +1,5 @@
 # https://www.kaggle.com/jesucristo/rsna-introduction-eda-models
+#pip install --user  pydicom
 
 # Import Packages
 import numpy as np
@@ -14,10 +15,15 @@ print ('Packages ready!')
 
 
 # Load Data
-train = pd.read_csv("../input/rsna-intracranial-hemorrhage-detection/stage_1_train.csv")
-sub = pd.read_csv("../input/rsna-intracranial-hemorrhage-detection/stage_1_sample_submission.csv")
-train_images = os.listdir("../input/rsna-intracranial-hemorrhage-detection/stage_1_train_images/")
-test_images = os.listdir("../input/rsna-intracranial-hemorrhage-detection/stage_1_test_images/")
+# train = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_1_train.csv")
+# sub = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_1_sample_submission.csv")
+# train_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_1_train_images/")
+# test_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_1_test_images/")
+
+train = pd.read_csv("/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-intracranial-hemorrhage-detection/stage_2_train.csv")
+sub = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_2_sample_submission.csv")
+train_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_2_train/")
+test_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_2_test/")
 print ('Train:', train.shape[0])
 print ('Sub:', sub.shape[0])
 
@@ -52,8 +58,14 @@ sns.countplot(x="Label", hue="type", data=train)
 
 
 # Visualization
-TRAIN_IMG_PATH = "../input/rsna-intracranial-hemorrhage-detection/stage_1_train_images/"
-TEST_IMG_PATH = "../input/rsna-intracranial-hemorrhage-detection/stage_1_test_images/"
+# TRAIN_IMG_PATH = "../input/rsna-intracranial-hemorrhage-detection/stage_1_train_images/"
+# TEST_IMG_PATH = "../input/rsna-intracranial-hemorrhage-detection/stage_1_test_images/"
+# BASE_PATH = '/kaggle/input/rsna-intracranial-hemorrhage-detection/'
+# TRAIN_DIR = 'stage_1_train_images/'
+# TEST_DIR = 'stage_1_test_images/'
+
+TRAIN_IMG_PATH = ".././rsna-intracranial-hemorrhage-detection/stage_2_train/"
+TEST_IMG_PATH = ".././rsna-intracranial-hemorrhage-detection/stage_2_test/"
 BASE_PATH = '/kaggle/input/rsna-intracranial-hemorrhage-detection/'
 TRAIN_DIR = 'stage_1_train_images/'
 TEST_DIR = 'stage_1_test_images/'
