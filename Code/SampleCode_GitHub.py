@@ -57,7 +57,7 @@ sns.countplot(x="Label", hue="type", data=train)
 
 TRAIN_IMG_PATH = ".././rsna-intracranial-hemorrhage-detection/stage_2_train/"
 TEST_IMG_PATH = ".././rsna-intracranial-hemorrhage-detection/stage_2_test/"
-BASE_PATH = '/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-intracranial-hemorrhage-detection'
+BASE_PATH = '/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-intracranial-hemorrhage-detection/'
 TRAIN_DIR = '/stage_2_train/'
 TEST_DIR = '/stage_2_test/'
 
@@ -163,7 +163,7 @@ print(pivot_df.head())
 
 
 def save_and_resize(filenames, load_dir):
-    save_dir = '/home/ubuntu/Machine-Learning/Final-Project-Group9'
+    save_dir = '/home/ubuntu/Machine-Learning/Final-Project-Group9/tmp/'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
 
@@ -203,7 +203,7 @@ def create_datagen():
 def create_test_gen():
     return ImageDataGenerator().flow_from_dataframe(
         test,
-        directory='/home/ubuntu/Machine-Learning/Final-Project-Group9/',
+        directory='/home/ubuntu/Machine-Learning/Final-Project-Group9/tmp/',
         x_col='filename',
         class_mode=None,
         target_size=(224, 224),
@@ -214,11 +214,11 @@ def create_test_gen():
 def create_flow(datagen, subset):
     return datagen.flow_from_dataframe(
         pivot_df,
-        directory='/home/ubuntu/Machine-Learning/Final-Project-Group9/',
+        directory='/home/ubuntu/Machine-Learning/Final-Project-Group9/tmp/',
         x_col='filename',
         y_col=['any', 'epidural', 'intraparenchymal',
                'intraventricular', 'subarachnoid', 'subdural'],
-        class_mode='other',
+        class_mode='raw',
         target_size=(224, 224),
         batch_size=BATCH_SIZE,
         subset=subset
@@ -226,16 +226,16 @@ def create_flow(datagen, subset):
 
 # Using original generator
 data_generator = create_datagen()
-train_gen = create_flow(data_generator, 'training')
-val_gen = create_flow(data_generator, 'validation')
+train_gen = create_flow(data_generator, subset='training')
+val_gen = create_flow(data_generator, subset='validation')
 test_gen = create_test_gen()
 
 
 # DenseNet Model
 
 densenet = DenseNet121(
-    weights='imagenet',
-    include_top= True,
+    weights='/home/ubuntu/Machine-Learning/Final-Project-Group9/DenseNet-BC-121-32-no-top.h5',
+    include_top= False,
     input_shape=(224,224,3)
 )
 
