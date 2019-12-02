@@ -153,7 +153,7 @@ print ('Test:', test.shape[0])
 print(test.head())
 
 np.random.seed(1234)
-sample_files = np.random.choice(os.listdir(TRAIN_IMG_PATH), 200000)
+sample_files = np.random.choice(os.listdir(TRAIN_IMG_PATH), 20000)
 sample_df = train[train.filename.apply(lambda x: x.replace('.png', '.dcm')).isin(sample_files)]
 
 pivot_df = sample_df[['Label', 'filename', 'type']].drop_duplicates().pivot(
