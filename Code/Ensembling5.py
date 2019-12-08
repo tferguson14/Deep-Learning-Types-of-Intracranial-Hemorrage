@@ -16,6 +16,7 @@ from keras.models import Sequential, Model
 from keras.layers import Dense, MaxPool2D, Conv2D, MaxPooling2D, GlobalAveragePooling2D, Dropout, Input, Average, average
 from keras.optimizers import Adam
 from tqdm import tqdm
+from keras.applications import VGG16
 
 # Load Data
 train = pd.read_csv("/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-intracranial-hemorrhage-detection/stage_2_train.csv")
@@ -91,11 +92,11 @@ print ('Test:', test.shape[0])
 print(test.head())
 
 np.random.seed(1234)
-sample_files = np.random.choice(os.listdir(TRAIN_IMG_PATH), 2000)
+sample_files = np.random.choice(os.listdir(TRAIN_IMG_PATH), 200000)
 np.random.shuffle(sample_files)
 print(type(sample_files))
 print(sample_files.shape)
-sample_train, sample_test = sample_files[:1500], sample_files[1500:]
+sample_train, sample_test = sample_files[:150000], sample_files[150000:]
 print(sample_train.shape)
 print(sample_test.shape)
 sample_df_train = train[train.filename.apply(lambda x: x.replace('.png', '.dcm')).isin(sample_train)]
@@ -131,9 +132,9 @@ def save_and_resize(filenames, load_dir):
         if not res:
             print('Failed')
 
-# save_and_resize(filenames=sample_train, load_dir=BASE_PATH + TRAIN_DIR)
-# save_and_resize(filenames=sample_test, load_dir=BASE_PATH + TRAIN_DIR)
-# save_and_resize(filenames=os.listdir(BASE_PATH + TEST_DIR), load_dir=BASE_PATH + TEST_DIR)
+save_and_resize(filenames=sample_train, load_dir=BASE_PATH + TRAIN_DIR)
+save_and_resize(filenames=sample_test, load_dir=BASE_PATH + TRAIN_DIR)
+save_and_resize(filenames=os.listdir(BASE_PATH + TEST_DIR), load_dir=BASE_PATH + TEST_DIR)
 
 BATCH_SIZE = 32
 
@@ -229,18 +230,22 @@ custom_model = Model(inputs=x1, outputs=output1, name='custom_cnn')
 
 def compile_and_train(model, num_epochs):
     model.compile(loss='binary_crossentropy', optimizer=Adam(), metrics=['acc'])
-    #filepath = '/home/ubuntu/Machine-Learning/Final-Project-Group9/Code/' + model.name + '.{epoch:02d}-{val_acc:.2f}.hdf5'
-    checkpoint = ModelCheckpoint(model.name+'.hdf5', monitor='val_acc', verbose=1, save_weights_only=True, save_best_only=True,
+    filepath = model.name + '.hdf5'
+    checkpoint = ModelCheckpoint(filepath, monitor='val_acc', verbose=1, save_weights_only=True, save_best_only=True,
                                  mode='auto', period=1)
+    #filepath = '/home/ubuntu/Machine-Learning/Final-Project-Group9/Code/' + model.name + '.{epoch:02d}-{val_acc:.2f}.hdf5'
+    # checkpoint = ModelCheckpoint(model.name+'.hdf5', monitor='val_acc', verbose=1, save_weights_only=True, save_best_only=True,
+    #                              mode='auto', period=1)
     # tensor_board = TensorBoard(log_dir='logs/', histogram_freq=0, batch_size=batch_size)
     history = model.fit_generator(train_gen, steps_per_epoch=total_steps * 0.85, validation_data=val_gen,
                                   validation_steps=total_steps * 0.15, callbacks=[checkpoint], epochs=num_epochs)
     # history = model.fit(X_train, Y_train, batch_size=batch_size, epochs=num_epochs, verbose=1, callbacks=[checkpoint, tensor_board], validation_data=(X_valid, Y_valid))
+    keras.backend.clear_session()
     return history
 
 
 #compile and train the model
-#_ = compile_and_train(custom_model, num_epochs=num_epochs)
+_ = compile_and_train(custom_model, num_epochs=num_epochs)
 
 def evaluate_error(model):
     pred = model.predict_generator(test_gen_new, steps=len(test_gen_new), verbose=1)
@@ -251,7 +256,8 @@ def evaluate_error(model):
 
     return error
 
-#evaluate_error(custom_model)
+#Evaluate the model by calculating the error on the test set
+evaluate_error(custom_model)
 
 densenet_model = DenseNet121(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 x = densenet_model.output
@@ -260,19 +266,29 @@ predictions = Dense(6, activation='sigmoid')(x)
 densenet_custom_model = Model(inputs=densenet_model.input, outputs=predictions, name='densenet_cnn')
 
 #compile and train the model
-#_ = compile_and_train(densenet_custom_model, num_epochs=num_epochs)
+_ = compile_and_train(densenet_custom_model, num_epochs=num_epochs)
 
 #Evaluate the model by calculating the error on the test set
-#evaluate_error(densenet_custom_model)
+evaluate_error(densenet_custom_model)
+
+vgg16_model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
+x = vgg16_model.output
+x = layers.GlobalAveragePooling2D()(x)
+predictions = Dense(6, activation='sigmoid')(x)
+vgg16_custom_model = Model(inputs=vgg16_model.input, outputs=predictions, name='vgg16_cnn')
+
+#compile and train the model
+_ = compile_and_train(vgg16_custom_model, num_epochs=num_epochs)
 
 densenet_custom_model.load_weights('densenet_cnn.hdf5')
 custom_model.load_weights('custom_cnn.hdf5')
+vgg16_custom_model.load_weights('vgg16_cnn.hdf5')
 
-models = [densenet_custom_model, custom_model]
+models = [densenet_custom_model, custom_model, vgg16_custom_model]
 
 
 def ensemble(models):
-    input_img = Input(shape=(224,224,3))
+    input_img = Input(shape=(224, 224, 3))
 
     outputs = [model(input_img) for model in models] # get the output of model given the input image
     y = Average()(outputs)
