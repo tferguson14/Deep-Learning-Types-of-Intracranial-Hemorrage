@@ -10,7 +10,7 @@ the type of hemorrhage, if present. The five types of hemorrhages that we aim to
 The dataset were obtained from the Kaggle competition.</p>
 
 
-###Network Training and Algorithm
+### Network Training and Algorithm
 
 <p>For this project we used Keras, which is an open source neural network library, to program and train our image 
 classification algorithm. After reviewing some of the available coding examples on Kaggle’s website, as well as several 
