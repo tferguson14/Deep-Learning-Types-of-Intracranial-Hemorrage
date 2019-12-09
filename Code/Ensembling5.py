@@ -23,8 +23,8 @@ train = pd.read_csv("/home/ubuntu/Machine-Learning/Final-Project-Group9/rsna-int
 sub = pd.read_csv(".././rsna-intracranial-hemorrhage-detection/stage_2_sample_submission.csv")
 train_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_2_train/")
 test_images = os.listdir(".././rsna-intracranial-hemorrhage-detection/stage_2_test/")
-print ('Train:', train.shape[0])
-print ('Sub:', sub.shape[0])
+print('Train:', train.shape[0])
+print('Sub:', sub.shape[0])
 
 train['type'] = train['ID'].str.split("_", n = 3, expand = True)[2]
 train['PatientID'] = train['ID'].str.split("_", n = 3, expand = True)[1]
@@ -35,11 +35,11 @@ sub['type'] = sub['ID'].apply(lambda st: st.split('_')[2])
 
 print(train.head())
 
-print ('Train type =', list(train.type.unique()))
-print ('Train label =', list(train.Label.unique()))
+print('Train type =', list(train.type.unique()))
+print('Train label =', list(train.Label.unique()))
 #train.to_csv('train.csv', index=False)
 
-print ('Number of Patients: ', train.PatientID.nunique())
+print('Number of Patients: ', train.PatientID.nunique())
 
 print(train.type.value_counts())
 
@@ -132,9 +132,9 @@ def save_and_resize(filenames, load_dir):
         if not res:
             print('Failed')
 
-save_and_resize(filenames=sample_train, load_dir=BASE_PATH + TRAIN_DIR)
-save_and_resize(filenames=sample_test, load_dir=BASE_PATH + TRAIN_DIR)
-save_and_resize(filenames=os.listdir(BASE_PATH + TEST_DIR), load_dir=BASE_PATH + TEST_DIR)
+# save_and_resize(filenames=sample_train, load_dir=BASE_PATH + TRAIN_DIR)
+# save_and_resize(filenames=sample_test, load_dir=BASE_PATH + TRAIN_DIR)
+# save_and_resize(filenames=os.listdir(BASE_PATH + TEST_DIR), load_dir=BASE_PATH + TEST_DIR)
 
 BATCH_SIZE = 32
 
@@ -207,7 +207,7 @@ test_gen = create_test_gen()
 
 
 # batch_size = 8
-num_epochs = 1
+num_epochs = 10 #1
 # img_rows= 224
 # img_cols = 224
 # num_channels = 3
@@ -216,17 +216,17 @@ num_epochs = 1
 total_steps = sample_files.shape[0] / BATCH_SIZE
 
 
-x1 = Input(shape=(224, 224, 3))
-x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x1)
-x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x)
-x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x)
-x = MaxPooling2D(padding='same')(x)
-x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x)
-x = GlobalAveragePooling2D()(x)
-x = Dropout(0.2)(x)
-output1 = Dense(6, activation='sigmoid', name='output1')(x)
-
-custom_model = Model(inputs=x1, outputs=output1, name='custom_cnn')
+# x1 = Input(shape=(224, 224, 3))
+# x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x1)
+# x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x)
+# x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x)
+# x = MaxPooling2D(padding='same')(x)
+# x = Conv2D(filters=96, kernel_size=(2, 2), activation='relu')(x)
+# x = GlobalAveragePooling2D()(x)
+# x = Dropout(0.2)(x)
+# output1 = Dense(6, activation='sigmoid', name='output1')(x)
+#
+# custom_model = Model(inputs=x1, outputs=output1, name='custom_cnn')
 
 def compile_and_train(model, num_epochs):
     model.compile(loss='binary_crossentropy', optimizer=Adam(), metrics=['acc'])
@@ -240,12 +240,12 @@ def compile_and_train(model, num_epochs):
     history = model.fit_generator(train_gen, steps_per_epoch=total_steps * 0.85, validation_data=val_gen,
                                   validation_steps=total_steps * 0.15, callbacks=[checkpoint], epochs=num_epochs)
     # history = model.fit(X_train, Y_train, batch_size=batch_size, epochs=num_epochs, verbose=1, callbacks=[checkpoint, tensor_board], validation_data=(X_valid, Y_valid))
-    keras.backend.clear_session()
+
     return history
 
 
 #compile and train the model
-_ = compile_and_train(custom_model, num_epochs=num_epochs)
+# _ = compile_and_train(custom_model, num_epochs=num_epochs)
 
 def evaluate_error(model):
     pred = model.predict_generator(test_gen_new, steps=len(test_gen_new), verbose=1)
@@ -257,7 +257,8 @@ def evaluate_error(model):
     return error
 
 #Evaluate the model by calculating the error on the test set
-evaluate_error(custom_model)
+# evaluate_error(custom_model)
+# keras.backend.clear_session()
 
 densenet_model = DenseNet121(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 x = densenet_model.output
@@ -270,6 +271,7 @@ _ = compile_and_train(densenet_custom_model, num_epochs=num_epochs)
 
 #Evaluate the model by calculating the error on the test set
 evaluate_error(densenet_custom_model)
+keras.backend.clear_session()
 
 vgg16_model = VGG16(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 x = vgg16_model.output
@@ -281,10 +283,11 @@ vgg16_custom_model = Model(inputs=vgg16_model.input, outputs=predictions, name='
 _ = compile_and_train(vgg16_custom_model, num_epochs=num_epochs)
 
 densenet_custom_model.load_weights('densenet_cnn.hdf5')
-custom_model.load_weights('custom_cnn.hdf5')
+# custom_model.load_weights('custom_cnn.hdf5')
 vgg16_custom_model.load_weights('vgg16_cnn.hdf5')
 
-models = [densenet_custom_model, custom_model, vgg16_custom_model]
+# models = [densenet_custom_model, custom_model, vgg16_custom_model]
+models = [densenet_custom_model, vgg16_custom_model]
 
 
 def ensemble(models):
@@ -298,8 +301,9 @@ def ensemble(models):
 
 
 ensemble_model = ensemble(models)
-#error = evaluate_error(ensemble_model)
-#print(error)
+# error = evaluate_error(ensemble_model)
+# print(error)
+
 
 pred1 = ensemble_model.predict_generator(test_gen, steps=len(test_gen), verbose=1)
 
@@ -313,7 +317,8 @@ test_df = test_df.melt(id_vars=['filename'])
 # Combine the filename column with the variable column
 test_df['ID'] = test_df.filename.apply(lambda x: x.replace('.png', '')) + '_' + test_df.variable
 test_df['Label'] = test_df['value']
-
+print("[INFO]Creating submission.csv...")
 test_df[['ID', 'Label']].to_csv('submission.csv', index=False)
 
 test_df[['ID', 'Label']].head(10)
+print("[INFO]Download completed!")
